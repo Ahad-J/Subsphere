@@ -1,0 +1,32 @@
+flowchart LR
+  ROUTE[FastAPI Router] --> AUTH[Auth Dependency: tenant / RBAC]
+  AUTH --> ORCH[Application Service]
+  subgraph CORE["Operational domain service interfaces"]
+    SUB[SubscriptionService]
+    BILL[BillingService]
+    SEAT[SeatService]
+    METER[UsageService]
+    PER[PersonalTrackerService]
+    NOTICE[NotificationPolicyService]
+    DOC[ReportService]
+    AL[AnalyticsQueryService]
+  end
+  ORCH --> SUB & BILL & SEAT & METER & PER & NOTICE & DOC & AL
+  SUB & BILL & SEAT & METER --> TX[UnitOfWork / SQLAlchemy Transaction]
+  TX --> REPO[Repositories + SQL Constraints]
+  REPO --> PG[(PostgreSQL)]
+  TX --> EVT[OutboxEvent Store]
+  EVT --> PG
+  POLLER[Outbox Dispatcher] --> EVT
+  POLLER --> K[Kafka Sink]
+  POLLER --> OM[OpenMeter Sink]
+  ADAPT[LiteLLM / API / CSV adapters] --> PER
+  TIMER[Scheduler] --> NOTICE
+  NOTICE --> NJ[NotificationJobs]
+  NJ --> SMTP[SMTP Adapter]
+  NJ --> WA[WhatsApp Adapter]
+  DOC --> PDF[PDF worker / WeasyPrint]
+  PDF --> STORE[Private MinIO Objects]
+  K --> SP[Spark Transform / Dedup / Gold]
+  SP --> STORE
+  SP --> AL

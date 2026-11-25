@@ -1,0 +1,31 @@
+sequenceDiagram
+ autonumber
+ participant C as Provider SDK
+ participant API as FastAPI
+ participant DB as PostgreSQL
+ participant W as Outbox Worker
+ participant K as Kafka
+ participant OM as OpenMeter
+ participant SP as Spark
+ participant M as MinIO
+ C->>API: POST /usage/consume (event_id, quantity)
+ API->>DB: BEGIN; verify service/key/period
+ API->>DB: Check idempotency and lock counter
+ alt Same accepted event
+  DB-->>API: previous accepted result
+  API-->>C: 200 duplicate=true; no increment
+ else Quota exceeded
+  DB-->>API: remaining < requested
+  API-->>C: 409 QUOTA_EXCEEDED
+ else Accepted
+  API->>DB: insert UsageEvent + atomic counter + OutboxEvent
+  DB-->>API: COMMIT (new remaining)
+  API-->>C: 201 accepted; remaining
+  W->>DB: Read pending event
+  par independent delivery destinations
+   W->>K: Publish canonical event (retryable)
+   W->>OM: Ingest CloudEvent (retryable)
+  end
+  K->>SP: Stream events
+  SP->>M: bronze -> silver -> gold (dedupe)
+ end

@@ -1,0 +1,42 @@
+flowchart TB
+ Client[Browsers and optional extensions] --> Edge[Reverse proxy / HTTPS]
+ Edge --> FE[React Frontend]
+ Edge --> API[FastAPI Backend]
+ subgraph Core["Compose: core (always enabled)"]
+  FE
+  API
+  P[(PostgreSQL core)]
+  Worker[Scheduler + outbox worker]
+  PDF[PDF worker / WeasyPrint]
+  MP[Mailpit dev SMTP]
+ end
+ API --> P
+ Worker --> P
+ PDF --> P
+ subgraph AI["Compose profile: ai"]
+  LL[LiteLLM]
+  LDB[(PostgreSQL: isolated litellm DB)]
+ end
+ API --> LL --> LDB
+ subgraph Meter["Compose profile: metering"]
+  OM[OpenMeter APIs / workers]
+  CH[(ClickHouse)]
+  ODB[(PostgreSQL: isolated openmeter DB)]
+  RED[(Redis where required)]
+ end
+ API --> OM --> CH
+ OM --> ODB
+ OM --> RED
+ subgraph Analytic["Compose profile: analytics"]
+  K[Kafka KRaft]
+  SP[Spark]
+  S3[(MinIO)]
+ end
+ Worker --> K --> SP --> S3
+ OM --> K
+ PDF --> S3
+ subgraph Mail["Separate Compose project on mail-capable host"]
+  PO[Postal official stack]
+ end
+ Worker --> MP
+ Worker -. production SMTP/TLS .-> PO

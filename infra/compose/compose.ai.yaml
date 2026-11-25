@@ -1,0 +1,17 @@
+services:
+  litellm:
+    build: ../../backend
+    image: subsphere/litellm:4.0.0
+    command: ["python", "/opt/services/containers/service_runner.py", "litellm"]
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-subsphere-local-dev-key}
+    volumes:
+      - ../../services:/opt/services:ro
+    ports:
+      - "127.0.0.1:4000:4000"
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness',timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5

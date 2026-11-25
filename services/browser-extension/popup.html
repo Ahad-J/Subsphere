@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SubSphere Activity Observer</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; width: 320px; margin: 14px; color: #0f172a; background: #f8fafc; }
+    .hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    h1 { font-size: 14px; margin: 0; }
+    .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+    .badge-ok { background: #dcfce7; color: #166534; }
+    .badge-warn { background: #fef9c3; color: #854d0e; }
+    .badge-off { background: #e2e8f0; color: #475569; }
+    p { font-size: 11px; color: #475569; margin: 4px 0 10px; line-height: 1.4; }
+    label { display: block; font-size: 11px; margin: 8px 0 3px; font-weight: 600; color: #334155; }
+    input, textarea { width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; }
+    .row { display: flex; gap: 6px; margin-top: 8px; }
+    button { flex: 1; padding: 7px 8px; font-size: 12px; font-weight: 600; border: 0; border-radius: 6px; cursor: pointer; background: #1e3a8a; color: #fff; }
+    button.sec { background: #0f766e; }
+    button.ghost { background: #e2e8f0; color: #1e293b; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 8px; }
+    .status { font-size: 11px; margin-top: 8px; color: #0f766e; min-height: 16px; }
+    .meta { font-size: 11px; color: #64748b; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <h1>SubSphere Observer</h1>
+    <span id="statusBadge" class="badge badge-off">Not paired</span>
+  </div>
+  <p>Privacy-safe: captures ONLY allowlisted domain focus time &amp; visits. Never reads prompts, URLs, titles, or cookies.</p>
+
+  <div class="card">
+    <label for="apiUrl">Backend URL</label>
+    <input id="apiUrl" type="text" placeholder="http://localhost:8000" />
+    <label for="pairCode">One-Time Pair Code (from SubSphere UI)</label>
+    <div class="row">
+      <input id="pairCode" type="text" placeholder="e.g. A1B2-C3D4" />
+      <button id="pairBtn" style="flex:0 0 76px;">Pair</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label for="allowlist">Allowlisted Domains (comma separated)</label>
+    <textarea id="allowlist" rows="2"></textarea>
+    <div class="row">
+      <button id="togglePause" class="ghost">Pause Tracking</button>
+      <button id="saveAllow" class="sec">Save Allowlist</button>
+    </div>
+    <div class="row">
+      <button id="syncNow">Sync Now</button>
+      <button id="importHist" class="ghost">Import Visits</button>
+    </div>
+    <div class="row">
+      <button id="openDash" class="ghost">Open Dashboard</button>
+      <button id="openOpts" class="ghost">Options</button>
+    </div>
+    <div class="meta" id="syncMeta">Last sync: never</div>
+  </div>
+
+  <div class="status" id="status"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

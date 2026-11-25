@@ -1,0 +1,44 @@
+flowchart TB
+ subgraph UI["CLIENT / EXPERIENCE"]
+   P[Personal Web View]
+   B[Provider Web View]
+   EX[Optional Browser Extension]
+   DESK[Optional Desktop Companion]
+   SDK[External Provider SDKs]
+ end
+ subgraph OP["OPERATIONAL CORE — FastAPI Modular Monolith"]
+   AUTH[Auth + Tenancy + RBAC]
+   CAT[Catalog + Subscriptions + Seats]
+   FIN[Finance + Billing + Payments]
+   USE[Metering + Entitlements]
+   NOT[Reminder Rules + Reports]
+   API[REST API / Adapters]
+ end
+ subgraph OPER["OPERATIONAL DATA"]
+   PG[(PostgreSQL)]
+   OUT[Transactional Outbox Worker]
+   REPORT[WeasyPrint Report Worker]
+   MAIL[Mailpit / Postal SMTP]
+ end
+ subgraph INTEG["OPTIONAL OPEN SOURCE INTEGRATIONS"]
+   LITE[LiteLLM AI Gateway]
+   OM[OpenMeter API + Workers]
+   CH[(ClickHouse)]
+ end
+ subgraph DATA["ANALYTICS PLANE"]
+   K[Kafka]
+   SP[Spark Structured Streaming]
+   M[(MinIO / Parquet Bronze/Silver/Gold)]
+   A[Materialized Analytics Summaries]
+ end
+ P & B & EX & DESK & SDK --> API
+ API --> AUTH & CAT & FIN & USE & NOT
+ AUTH & CAT & FIN & USE & NOT --> PG
+ PG --> OUT
+ NOT --> REPORT --> M
+ NOT --> MAIL
+ OUT --> K
+ OUT --> OM --> CH
+ SDK -. configured only .-> LITE
+ LITE --> API
+ K --> SP --> M --> A --> PG

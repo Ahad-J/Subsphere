@@ -1,0 +1,39 @@
+flowchart LR
+  I((Individual)):::actor
+  O((Business Owner)):::actor
+  S((Subscriber)):::actor
+  E((Employee)):::actor
+  D((Provider Developer)):::actor
+  W((System Workers)):::actor
+
+  subgraph IND[Individual View — FREE]
+    UC01[Register / Login]
+    UC02[Track own subscriptions]
+    UC03[Connect optional usage sources]
+    UC04[View usage + spending + calendar]
+    UC05[Manage reminders / export / delete]
+  end
+  subgraph PRO[Provider View — BUSINESS]
+    UC06[Create org / service / plan]
+    UC07[Manage subscribers & contacts]
+    UC08[Invoice, dues, payments]
+    UC09[Allocate enterprise seats]
+    UC10[Record custom usage/check-ins]
+    UC11[View KPIs and revenue vs expense]
+    UC12[Send receipts / reminders]
+  end
+  subgraph SYS[Platform Services]
+    UC13[Enforce quota atomically]
+    UC14[Send SMTP / approved WhatsApp]
+    UC15[Meter + historical analytics]
+  end
+  I --> UC01 & UC02 & UC03 & UC04 & UC05
+  O --> UC06 & UC07 & UC08 & UC09 & UC10 & UC11 & UC12
+  S --> UC12 & UC04
+  E --> UC09
+  D --> UC10 & UC13
+  W --> UC13 & UC14 & UC15
+  UC02 -. triggers .-> UC14
+  UC08 -. triggers .-> UC14
+  UC10 -. triggers .-> UC15
+  classDef actor fill:#eff6ff,stroke:#1d4ed8,color:#1e3a8a

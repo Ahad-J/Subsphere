@@ -1,0 +1,56 @@
+classDiagram
+ direction LR
+ class User {+UUID id;+string email;+bool verified;+register();+authenticate()}
+ class Account {+UUID id;+AccountKind kind;+string displayName}
+ class Organization {+UUID id;+string slug;+string timezone;+createService()}
+ class Membership {+UUID id;+Role role;+MembershipStatus status}
+ class SubscriberContact {+UUID id;+string email;+string phone;+invite()}
+ class Service {+UUID id;+string name;+ServiceStatus status;+publish()}
+ class PlanVersion {+UUID id;+int priceMinor;+BillingPeriod interval;+int seats;+publish()}
+ class Subscription {+UUID id;+SubscriptionStatus status;+datetime periodEnd;+activate();+renew();+cancel()}
+ class SubscriptionPeriod {+UUID id;+datetime start;+datetime end}
+ class SeatAllocation {+UUID id;+datetime assignedAt;+revoke()}
+ class FinancialObligation {+UUID id;+Direction direction;+int amountMinor;+ObligationStatus status;+markOverdue()}
+ class Invoice {+UUID id;+string number;+int totalMinor;+issue();+recordPayment()}
+ class Payment {+UUID id;+int amountMinor;+PaymentStatus status}
+ class MetricDefinition {+UUID id;+string key;+string unit;+Enforcement enforcement}
+ class UsageEvent {+UUID id;+string externalEventId;+int quantity;+datetime occurredAt}
+ class UsageCounter {+UUID id;+int consumed;+consumeAtomically()}
+ class PersonalSubscription {+UUID id;+string serviceName;+int priceMinor;+datetime nextRenewal}
+ class ActivityObservation {+UUID id;+Provenance source;+int quantity;+Confidence confidence}
+ class NotificationRule {+UUID id;+int offsetDays;+bool enabled}
+ class NotificationJob {+UUID id;+DeliveryStatus status;+schedule();+retry()}
+ class Report {+UUID id;+ReportKind kind;+string objectKey;+generate()}
+ class IntegrationConnection {+UUID id;+string source;+SyncStatus status;+sync()}
+ class OutboxEvent {+UUID id;+string type;+datetime publishedAt}
+ class UsageSourceAdapter {<<interface>>;+fetchUsage();+capabilities();+normalize()}
+ class EmailAdapter {<<interface>>;+send()}
+ class WhatsAppAdapter {<<interface>>;+send()}
+ class ReportRenderer {<<interface>>;+render()}
+ User "1" --> "1" Account : personal
+ User "1" --> "0..*" Membership
+ Account "1" --> "0..1" Organization
+ Organization "1" --> "0..*" Membership
+ Organization "1" --> "0..*" Service
+ Organization "1" --> "0..*" SubscriberContact
+ Service "1" --> "0..*" PlanVersion
+ PlanVersion "1" --> "0..*" Subscription
+ Subscription "1" --> "1..*" SubscriptionPeriod
+ Subscription "1" --> "0..*" SeatAllocation
+ Subscription "1" --> "0..*" FinancialObligation
+ FinancialObligation "1" --> "0..1" Invoice
+ Invoice "1" --> "0..*" Payment
+ Service "1" --> "0..*" MetricDefinition
+ SubscriptionPeriod "1" --> "0..*" UsageEvent
+ SubscriptionPeriod "1" --> "0..*" UsageCounter
+ Account "1" --> "0..*" PersonalSubscription
+ PersonalSubscription "1" --> "0..*" ActivityObservation
+ Account "1" --> "0..*" IntegrationConnection
+ Account "1" --> "0..*" NotificationRule
+ NotificationRule "1" --> "0..*" NotificationJob
+ Invoice "1" --> "0..*" Report
+ IntegrationConnection ..> UsageSourceAdapter
+ NotificationJob ..> EmailAdapter
+ NotificationJob ..> WhatsAppAdapter
+ Report ..> ReportRenderer
+ Subscription ..> OutboxEvent

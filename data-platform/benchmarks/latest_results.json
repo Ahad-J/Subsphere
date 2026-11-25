@@ -1,0 +1,87 @@
+{
+  "executed_at": "2026-11-13T07:59:01.818369+00:00",
+  "machine": {
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "cpu_count_logical": 4,
+    "ram_total_gb": 15.49,
+    "backend": "sqlite_wal_serialized_tx"
+  },
+  "benchmarks": {
+    "B-01_10k_events": {
+      "input_events": 10000,
+      "duplicate_ratio": 0.0,
+      "silver_unique_events": 10000,
+      "duplicates_removed": 0,
+      "gold_total_quantity": 10000,
+      "bronze_write_ms": 20.61,
+      "silver_gold_ms": 110.44,
+      "total_ms": 131.05,
+      "throughput_events_per_sec": 76305.6,
+      "zero_discrepancy": true
+    },
+    "B-02_100k_events": {
+      "input_events": 100000,
+      "duplicate_ratio": 0.0,
+      "silver_unique_events": 100000,
+      "duplicates_removed": 0,
+      "gold_total_quantity": 100000,
+      "bronze_write_ms": 95.51,
+      "silver_gold_ms": 1111.97,
+      "total_ms": 1207.48,
+      "throughput_events_per_sec": 82817.1,
+      "zero_discrepancy": true
+    },
+    "B-03_1M_events": {
+      "input_events": 1000000,
+      "duplicate_ratio": 0.0,
+      "silver_unique_events": 1000000,
+      "duplicates_removed": 0,
+      "gold_total_quantity": 1000000,
+      "bronze_write_ms": 931.89,
+      "silver_gold_ms": 10060.39,
+      "total_ms": 10992.29,
+      "throughput_events_per_sec": 90972.9,
+      "zero_discrepancy": true
+    },
+    "B-04_100k_10pct_duplicate_storm": {
+      "input_events": 100000,
+      "duplicate_ratio": 0.1,
+      "silver_unique_events": 90000,
+      "duplicates_removed": 10000,
+      "gold_total_quantity": 90000,
+      "bronze_write_ms": 127.81,
+      "silver_gold_ms": 1179.37,
+      "total_ms": 1307.19,
+      "throughput_events_per_sec": 76500.2,
+      "zero_discrepancy": true
+    },
+    "B-09_concurrent_quota_20_threads": {
+      "threads": 20,
+      "accepted_201": 10,
+      "rejected_409": 10,
+      "zero_overshoot": true,
+      "wall_ms": 345.95,
+      "p50_ms": 238.84,
+      "p95_ms": 277.539
+    },
+    "B-05_to_B-08_outage_recovery_and_replay": {
+      "kafka_delivered_during_openmeter_outage": 11,
+      "openmeter_failed_then_recovered": true,
+      "medallion_silver_after_run": 11,
+      "medallion_silver_after_replay": 11,
+      "replay_zero_duplicates": true,
+      "wall_ms": 45.28
+    },
+    "B-10_concurrent_dashboard_50_threads_200_reqs": {
+      "threads": 50,
+      "requests": 200,
+      "http_200": 200,
+      "errors": 0,
+      "wall_ms": 1764.2,
+      "p50_ms": 292.16,
+      "p95_ms": 743.7,
+      "p99_ms": 941.189
+    }
+  }
+}

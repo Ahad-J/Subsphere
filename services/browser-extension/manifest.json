@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "SubSphere Activity Observer (Opt-In)",
+  "version": "4.1.0",
+  "description": "Privacy-safe opt-in allowlisted domain duration tracker for SubSphere Individual View. Never reads prompts, page content, full URLs, or cookies.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "idle"
+  ],
+  "optional_permissions": [
+    "history"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SubSphere Activity Observer"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:*/*", "http://127.0.0.1:*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

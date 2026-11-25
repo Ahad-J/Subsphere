@@ -1,0 +1,101 @@
+name: subsphere
+services:
+  postgres:
+    image: postgres:16.6-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-subsphere}
+      POSTGRES_USER: ${POSTGRES_USER:-subsphere}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  backend:
+    build: ../../backend
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_SECRET: ${APP_SECRET:-dev-subsphere-secret-change-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-subsphere}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-subsphere}
+      SUBSPHERE_DATA_DIR: /data/subsphere
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@subsphere.local}
+      LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-subsphere-local-dev-key}
+      OPENMETER_URL: ${OPENMETER_URL:-}
+    volumes:
+      - subsphere_data:/data/subsphere
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live',timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build: ../../backend
+    command: ["python", "/opt/services/worker/outbox_dispatcher.py"]
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_SECRET: ${APP_SECRET:-dev-subsphere-secret-change-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-subsphere}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-subsphere}
+      SUBSPHERE_DATA_DIR: /data/subsphere
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@subsphere.local}
+      LITELLM_URL: ${LITELLM_URL:-http://litellm:4000}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-subsphere-local-dev-key}
+      OPENMETER_URL: ${OPENMETER_URL:-}
+      WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-5}
+    volumes:
+      - ../../services:/opt/services:ro
+      - subsphere_data:/data/subsphere
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+
+  report-worker:
+    build: ../../backend
+    command: ["python", "/opt/services/report-worker/worker.py"]
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_SECRET: ${APP_SECRET:-dev-subsphere-secret-change-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-subsphere}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-subsphere}
+      SUBSPHERE_DATA_DIR: /data/subsphere
+    volumes:
+      - ../../services:/opt/services:ro
+      - subsphere_data:/data/subsphere
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal]
+
+  frontend:
+    build: ../../frontend
+    ports:
+      - "127.0.0.1:8080:80"
+    networks: [internal]
+    depends_on: [backend]
+
+volumes:
+  pgdata:
+  subsphere_data:
+
+networks:
+  internal:
+    driver: bridge

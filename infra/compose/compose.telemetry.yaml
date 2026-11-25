@@ -1,0 +1,18 @@
+services:
+  otel-collector:
+    build: ../../backend
+    command: ["python", "/opt/services/containers/service_runner.py", "otel-collector"]
+    profiles: ["telemetry"]
+    environment:
+      BACKEND_OTEL_URL: http://backend:8000/v1/metrics
+    ports:
+      - "127.0.0.1:4317:4317"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4317/health',timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

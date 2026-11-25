@@ -1,0 +1,71 @@
+services:
+  kafka:
+    image: apache/kafka:3.8.1
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+    ports:
+      - "127.0.0.1:9092:9092"
+    networks: [internal]
+
+  minio:
+    build: ../../backend
+    image: subsphere/minio:4.0.0
+    command: ["python", "/opt/services/containers/service_runner.py", "minio"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-subsphere_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-subsphere_minio_secret_123}
+    volumes:
+      - ../../services:/opt/services:ro
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    networks: [internal]
+
+  spark-master:
+    build: ../../backend
+    image: subsphere/spark:4.0.0
+    command: ["python", "/opt/services/containers/service_runner.py", "spark-master"]
+    environment:
+      SPARK_MODE: master
+    volumes:
+      - ../../services:/opt/services:ro
+      - ../../data-platform/spark:/opt/subsphere-spark:ro
+      - subsphere_data:/data/subsphere
+    ports:
+      - "127.0.0.1:7077:7077"
+      - "127.0.0.1:8081:8080"
+    networks: [internal]
+
+  spark-worker:
+    build: ../../backend
+    image: subsphere/spark:4.0.0
+    command: ["python", "/opt/services/containers/service_runner.py", "spark-worker"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-subsphere}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-subsphere}
+      SUBSPHERE_DATA_DIR: /data/subsphere
+    depends_on:
+      spark-master:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../../services:/opt/services:ro
+      - ../../data-platform/spark:/opt/subsphere-spark:ro
+      - subsphere_data:/data/subsphere
+    networks: [internal]
+
+volumes:
+  kafka_data:
+  minio_data:

@@ -1,0 +1,25 @@
+sequenceDiagram
+ autonumber
+ participant O as Provider Owner
+ participant UI as Provider UI
+ participant API as FastAPI
+ participant PG as PostgreSQL
+ participant SCH as Scheduler/Worker
+ participant PDF as WeasyPrint Worker
+ participant SMTP as Mailpit/Postal
+ participant WA as WhatsApp API
+ O->>UI: Confirm payment
+ UI->>API: POST invoice/payments; idempotency key
+ API->>PG: Transaction: validate role+balance, append Payment
+ API->>PG: Update invoice status, outbox event, commit
+ API-->>UI: 201 payment confirmed
+ SCH->>PG: Fetch committed payment event
+ SCH->>PDF: Generate immutable receipt from snapshot
+ PDF->>PG: Persist private object key and checksum
+ SCH->>SMTP: Send recipient email (SMTP)
+ SMTP-->>SCH: accepted by relay or error
+ opt subscriber explicitly opted into WhatsApp
+  SCH->>WA: Send approved template + secure receipt link
+  WA-->>SCH: provider message ID/status
+ end
+ SCH->>PG: Record delivery attempt/status (not false delivered)
